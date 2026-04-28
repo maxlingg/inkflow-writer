@@ -1,0 +1,52 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Find and unzip source package
+        run: |
+          ZIP_FILE="$(find . -maxdepth 1 \( -iname 'inkflow_writer_source.zip' -o -iname '*.zip' \) | head -n 1)"
+          echo "Using source package: $ZIP_FILE"
+          test -n "$ZIP_FILE"
+          unzip -o "$ZIP_FILE"
+
+      - name: Create Flutter Android project
+        run: |
+          flutter --version
+          flutter create inkflow_writer_app --org com.maxlingg.inkflow --platforms=android
+          cp -R inkflow_writer/lib inkflow_writer_app/
+          cp inkflow_writer/pubspec.yaml inkflow_writer_app/pubspec.yaml
+          cp inkflow_writer/analysis_options.yaml inkflow_writer_app/analysis_options.yaml
+
+      - name: Install dependencies
+        run: |
+          cd inkflow_writer_app
+          flutter pub get
+
+      - name: Build APK
+        run: |
+          cd inkflow_writer_app
+          flutter build apk --release
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: inkflow-writer-apk
+          path: inkflow_writer_app/build/app/outputs/flutter-apk/app-release.apk
