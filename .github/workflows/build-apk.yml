@@ -22,9 +22,10 @@ jobs:
 
       - name: Find and unzip source package
         run: |
-          ZIP_FILE="$(find . -maxdepth 1 \( -iname 'inkflow_writer_source.zip' -o -iname '*.zip' \) | head -n 1)"
+          ZIP_FILE="$(find . -maxdepth 1 -iname '*.zip' | sort | tail -n 1)"
           echo "Using source package: $ZIP_FILE"
           test -n "$ZIP_FILE"
+          rm -rf inkflow_writer inkflow_writer_app
           unzip -o "$ZIP_FILE"
 
       - name: Create Flutter Android project
@@ -34,6 +35,19 @@ jobs:
           cp -R inkflow_writer/lib inkflow_writer_app/
           cp inkflow_writer/pubspec.yaml inkflow_writer_app/pubspec.yaml
           cp inkflow_writer/analysis_options.yaml inkflow_writer_app/analysis_options.yaml
+
+      - name: Enable Android Internet permission
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('inkflow_writer_app/android/app/src/main/AndroidManifest.xml')
+          text = path.read_text()
+          needle = '<manifest xmlns:android="http://schemas.android.com/apk/res/android">'
+          permission = '    <uses-permission android:name="android.permission.INTERNET" />'
+          if 'android.permission.INTERNET' not in text:
+              text = text.replace(needle, needle + '\n' + permission)
+              path.write_text(text)
+          PY
 
       - name: Install dependencies
         run: |
