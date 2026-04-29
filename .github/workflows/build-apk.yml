@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - master
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,9 +22,12 @@ jobs:
 
       - name: Find and unzip source package
         run: |
-          ZIP_FILE="$(find . -maxdepth 1 -iname 'inkflow_writer_source_v1_3.zip' | head -n 1)"
+          ZIP_FILE="$(find . -maxdepth 1 -iname 'inkflow_writer_source_v1_4.zip' | head -n 1)"
           if [ -z "$ZIP_FILE" ]; then
-            ZIP_FILE="$(find . -maxdepth 1 -iname 'inkflow_writer_source_v1_2.zip' | head -n 1)"
+            ZIP_FILE="$(find . -maxdepth 1 -iname 'inkflow_writer_source_v1_3_1.zip' | head -n 1)"
+          fi
+          if [ -z "$ZIP_FILE" ]; then
+            ZIP_FILE="$(find . -maxdepth 1 -iname 'inkflow_writer_source_v1_3.zip' | head -n 1)"
           fi
           if [ -z "$ZIP_FILE" ]; then
             ZIP_FILE="$(find . -maxdepth 1 \( -iname 'inkflow_writer_source.zip' -o -iname '*.zip' \) | head -n 1)"
@@ -61,6 +65,11 @@ jobs:
           cd inkflow_writer_app
           flutter pub get
 
+      - name: Analyze Dart code
+        run: |
+          cd inkflow_writer_app
+          flutter analyze
+
       - name: Build APK
         run: |
           cd inkflow_writer_app
@@ -69,5 +78,5 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: inkflow-writer-apk-v1-3
+          name: inkflow-writer-apk-v1-4
           path: inkflow_writer_app/build/app/outputs/flutter-apk/app-release.apk
